@@ -15,12 +15,12 @@ const ImageRequest = require('./image-request.js');
 const ImageHandler = require('./image-handler.js');
 
 exports.handler = async (event) => {
-    console.log(event);
+    if (process.env.DEBUG) console.log(event);
     const imageRequest = new ImageRequest();
     const imageHandler = new ImageHandler();
     try {
         const request = await imageRequest.setup(event);
-        console.log(request);
+        if (process.env.DEBUG) console.log(request);
         const processedRequest = await imageHandler.process(request);
         const response = {
             "statusCode": 200,
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
         }
         return response;
     } catch (err) {
-        console.log(err);
+        if (process.env.DEBUG) console.log(err);
         const response = {
             "statusCode": err.status,
             "headers" : getResponseHeaders(true),
@@ -42,9 +42,9 @@ exports.handler = async (event) => {
 }
 
 /**
- * Generates the appropriate set of response headers based on a success 
+ * Generates the appropriate set of response headers based on a success
  * or error condition.
- * @param {boolean} isErr - has an error been thrown? 
+ * @param {boolean} isErr - has an error been thrown?
  */
 const getResponseHeaders = (isErr) => {
     const corsEnabled = (process.env.CORS_ENABLED === "Yes");
@@ -52,7 +52,7 @@ const getResponseHeaders = (isErr) => {
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Credentials": true,
-        "Content-Type": "image"
+        "Content-Type": "image/jpeg"
     }
     if (corsEnabled) {
         headers["Access-Control-Allow-Origin"] = process.env.CORS_ORIGIN;
