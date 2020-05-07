@@ -1,12 +1,12 @@
 /*********************************************************************************************************************
  *  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.                                           *
  *                                                                                                                    *
- *  Licensed under the Amazon Software License (the "License"). You may not use this file except in compliance        *
+ *  Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance    *
  *  with the License. A copy of the License is located at                                                             *
  *                                                                                                                    *
- *      http://aws.amazon.com/asl/                                                                                    *
+ *      http://www.apache.org/licenses/LICENSE-2.0                                                                    *
  *                                                                                                                    *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES *
  *  OR CONDITIONS OF ANY KIND, express or implied. See the License for the specific language governing permissions    *
  *  and limitations under the License.                                                                                *
  *********************************************************************************************************************/
@@ -22,22 +22,28 @@ exports.handler = async (event) => {
         const request = await imageRequest.setup(event);
         if (process.env.DEBUG) console.log(request);
         const processedRequest = await imageHandler.process(request);
-        const response = {
+
+        const headers = getResponseHeaders();
+        headers["Content-Type"] = request.ContentType;
+        headers["Expires"] = request.Expires;
+        headers["Last-Modified"] = request.LastModified;
+        headers["Cache-Control"] = request.CacheControl;
+
+        return {
             "statusCode": 200,
-            "headers" : getResponseHeaders(),
+            "headers" : headers,
             "body": processedRequest,
             "isBase64Encoded": true
-        }
-        return response;
+        };
     } catch (err) {
-        if (process.env.DEBUG) console.log(err);
-        const response = {
+        console.log(err);
+
+        return {
             "statusCode": err.status,
             "headers" : getResponseHeaders(true),
             "body": JSON.stringify(err),
             "isBase64Encoded": false
-        }
-        return response;
+        };
     }
 }
 
@@ -51,8 +57,7 @@ const getResponseHeaders = (isErr) => {
     const headers = {
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Credentials": true,
-        "Content-Type": "image/jpeg"
+        "Access-Control-Allow-Credentials": true
     }
     if (corsEnabled) {
         headers["Access-Control-Allow-Origin"] = process.env.CORS_ORIGIN;
